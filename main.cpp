@@ -57,7 +57,7 @@ UserData submenu(UserData database){
         }
         else if(input=="4"){ ///LIST USERS
             secondaryMenuPrint("null");
-            database.interface();
+            database.interface("list");
         }
         else if(input=="5"){ ///CHANGE PASSWORD
             secondaryMenuPrint("null");
@@ -79,6 +79,7 @@ UserData submenu(UserData database){
             }
         }
         else if(input=="6"){ ///DELETE ACCOUNT
+            secondaryMenuPrint("null");
             database.deleteAccount();
             cout<<"Account deleted."<<endl;
             sleep(1);
@@ -152,7 +153,7 @@ int main()
         else if(input=="3"){ ///QUIT
             mainMenuPrint("null");
             cout<<"Goodbye!"<<endl;
-            //database.exporter(); //tree easier to access from inside class
+            database.interface("export"); //tree easier to access from inside class
             return 0;
         }
         else{

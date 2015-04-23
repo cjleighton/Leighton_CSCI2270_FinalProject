@@ -21,7 +21,7 @@ class UserData
         ~UserData();
         void importer();
         void exporter(User *x);
-        void interface(); //for printing
+        void interface(string); //for printing
         string login(string,string); //user and pass
         bool addUser(string,string); //user and pass
         void listUsers(User*);
@@ -30,6 +30,7 @@ class UserData
         void loadText(string);
         void commonWords();
         void avgWordLength();
+        void sortText(); //NEW FEATURE: sort entered text alphabetically
         User* searcher(string);
     protected:
     private:
@@ -37,7 +38,8 @@ class UserData
         string sessionUser;
         string sessionPassword;
         string userText;
-        vector<string> textVector;
+        vector<string> textVector; //user text stored here for analysis
+        string exportLine;
 };
 
 #endif // USERDATA_H

@@ -19,27 +19,26 @@ UserData::UserData()
 
 UserData::~UserData(){}
 
-void UserData::interface(){ //this won't count as one of the 10 methods, too cheaty
-    //if(occasion=="list"){
+void UserData::interface(string occasion){ //this won't count as one of the 10 methods, too cheaty
+    if(occasion=="list"){
         listUsers(root);
-    /*}
+    }
     else if(occasion=="export"){
-        User *x=root;
-        ifstream outFile;
-        outFile.open("logins.txt");
-        exporter(x);
-    }*/
+        ofstream outFile("logins.txt");
+        exporter(root);
+        outFile<<exportLine;
+        outFile.close();
+    }
 }
 
 void UserData::importer()
 {
-    ifstream inFile;
-    inFile.open("logins.txt");
+    ifstream inFile("logins.txt");
     string importUser,importPass;
     while(inFile){
         getline(inFile,importUser,',');
         getline(inFile,importPass,'\n');
-        if(importUser != ""){ //last line is there, but empty - program processes it as user
+        if(importUser != ""){ //last line is there, but empty - program mistakenly processes it as user. this catches that
             addUser(importUser, importPass);
         }
     }
@@ -47,14 +46,12 @@ void UserData::importer()
 
 void UserData::exporter(User* x)
 {
-    string line;
-    x=root;
     if(x->leftChild != NULL){
         exporter(x->leftChild);
     }
     if(x->username != "null"){ //skips over 'null' root
-        //line=x->username+","+x->password+"\n";
-        //outFile<<line;
+        exportLine=exportLine+x->username+","+x->password; ///seems like this will get astoundingly inefficient with large trees
+        exportLine=exportLine+"\n";
     }
     if(x->rightChild != NULL){
         exporter(x->rightChild);
@@ -74,7 +71,7 @@ string UserData::login(string username, string password)
         return "badPass";
     }
     else{
-        return "badUser";
+        return "badUser"; //returns string so that we can have these three different returns; 'true' and 'false' aren't enough
     }
 }
 
@@ -85,7 +82,6 @@ bool UserData::addUser(string username, string password)
     if(test->username==username){ //user already exists
         return false;
     }
-
     User *newUser=new User; //only gets this far if user doesn't already exist
     newUser->username=username;
     newUser->password=password;
@@ -140,12 +136,80 @@ bool UserData::changePass(string oldPass, string newPass)
 
 void UserData::deleteAccount()
 {
-    //
+    User* x=searcher(sessionUser);
+    //x->username now definitely equals sessionUser
+    if(x->leftChild==NULL && x->rightChild==NULL){ ///NO CHILDREN
+        if(x->parent->leftChild==x){
+            x->parent->leftChild=NULL;
+        }
+        else{
+            x->parent->rightChild=NULL;
+        }
+        delete x;
+    }
+    else if((x->leftChild==NULL && x->rightChild != NULL) || (x->leftChild != NULL && x->rightChild==NULL)){ ///ONE CHILD
+        if(x->leftChild==NULL && x->rightChild != NULL){
+            if(x->parent->leftChild==x){
+                x->parent->leftChild=x->rightChild;
+                x->rightChild->parent=x->parent;
+                delete x;
+            }
+            else{
+                x->parent->rightChild=x->rightChild;
+                x->rightChild->parent=x->parent;
+                delete x;
+            }
+
+        }
+        else{
+            if(x->parent->leftChild==x){
+                x->parent->leftChild=x->leftChild;
+                x->leftChild->parent=x->parent;
+                delete x;
+            }
+            else{
+                x->parent->rightChild=x->leftChild;
+                x->leftChild->parent=x->parent;
+                delete x;
+            }
+        }
+    }
+    else if(x->leftChild != NULL && x->rightChild != NULL){ ///TWO CHILDREN
+        User* xRight=x->rightChild;
+        if(xRight->leftChild==NULL && xRight->rightChild==NULL){
+            x->username=xRight->username;
+            x->password=xRight->password;
+            delete xRight;
+            x->rightChild=NULL;
+        }
+        else{
+            if((x->rightChild)->leftChild != NULL){
+                User* xLeft=(x->rightChild)->leftChild;
+                User* xLeftP=(x->rightChild);
+                while(xLeft->leftChild != NULL){
+                    xLeftP=xLeft;
+                    xLeft=xLeft->leftChild;
+                }
+                x->username=xLeft->username;
+                x->password=xLeft->password;
+                delete xLeft;
+                xLeftP->leftChild=NULL;
+            }
+            else{ //(x->right)->right != NULL
+                User* temp=x->rightChild;
+                x->username=temp->username;
+                x->password=temp->password;
+                x->rightChild=temp->rightChild;
+                delete temp;
+            }
+        }
+    }
 }
 
 void UserData::loadText(string text)
 {
-    userText=text;
+    textVector.clear(); //clear if user is doing this for a second time (ergo textVector will already have stuff in it)
+    userText=text; //no need to reset userText to "", though
     istringstream is(userText);
     string word;
     while(is>>word){
@@ -168,15 +232,21 @@ void UserData::avgWordLength()
         return;
     }
     int letterSum=0;
+    int wordCount=0;
+    float avgWordLength;
     for(int i=0; i<textVector.size(); i++){
-        cout<<textVector[i]<<" ";
+        letterSum=letterSum+textVector[i].size();
+        wordCount=wordCount+1;
     }
-    for(int i=0; i<textVector.size(); i++){
-        if(textVector[i] != " "){
-            letterSum=letterSum+textVector[i].size();
-        }
-    }
-    cout<<endl<<letterSum;
+    float letterSumD=float(letterSum); //just conversion from int to double for better averaging
+    float wordCountD=float(wordCount);
+    avgWordLength=letterSumD/wordCountD;
+    cout<<"Average word length: "<<avgWordLength<<" characters."<<endl;
+}
+
+void UserData::sortText()
+{
+    //
 }
 
 User* UserData::searcher(string item)
