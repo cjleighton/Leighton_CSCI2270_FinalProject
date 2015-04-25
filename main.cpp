@@ -94,7 +94,7 @@ UserData submenu(UserData database){
 int main()
 {
     UserData database;
-    database.importer();
+    database.importer(); //imports text from logins.txt and adds to 'database'
 
     string loggedIn="false"; //set to badLogin or badPass if bad login upon call of databse.login, submenu is never called without login function returning true
     string input, username, password;
@@ -105,17 +105,16 @@ int main()
 
         if(input=="1"){ ///LOG IN
             mainMenuPrint("null");
-            cout<<"Username: ";
+            cout<<"Username: "; //takes in username and password
             cin>>username;
             cout<<"Password: ";
             cin>>password;
             loggedIn=database.login(username, password); //true if successful login, false if not
-            if(loggedIn=="true"){ //second login and
+            if(loggedIn=="true"){
                 mainMenuPrint("null");
                 cout<<"Success!"<<endl;
                 sleep(1);
-                database=submenu(database); //but... does submenu need to return database? I think so, to update things done to database from submenu like account deletions
-                //loggedIn=false; //sort of clarifying to code readers, but completely unnecessary
+                database=submenu(database); //switches to submenu
                 mainMenuPrint("null"); ///returns here if 6 or 7 are pressed from submenu
             }
             else if(loggedIn=="badUser"){
