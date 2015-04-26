@@ -252,29 +252,65 @@ void UserData::deleteAccount()
 
 /*void loadText(string); is called when the logged-in user asks to enter a
 string of text, which loadText takes as argument 'text', splits into
-individual words, and pushes into textVector, a globally declared vector of
-string. It returns nothing, but filling textVector makes it available for
-use in commonWords(), avgWordLength(), and sortText().*/
-void UserData::loadText(string text)
+individual words, and pushes into 'text', a globally declared vector of
+textVector structs. It returns nothing, but filling text makes it available
+for use in commonWords(), avgWordLength(), and sortText().*/
+void UserData::loadText(string uText)
 {
-    textVector.clear(); //clear if user is doing this for a second time (ergo textVector will already have stuff in it)
-    userText=text; //no need to reset userText to "", though
-    istringstream is(userText);
+    text.clear(); //clear if user is doing this for a second time (ergo text will already have stuff in it)
+    textTemp.clear();
+    userText=uText; //no need to reset userText to "", though
+    istringstream is(uText);
     string word;
+    textVector *newText=new textVector; //new word to be inserted
     while(is>>word){
-        textVector.push_back(word);
+        newText->word=word;
+        newText->usages=1;
+        text.push_back(*newText);
+        textTemp.push_back(*newText); //solely for usage in commonWords
+    }
+    for(int i=0; i<text.size(); i++){ //calculates the usage of each text[i].word and inserts usage into text[i].usages
+        for(int j=0; j<text.size(); j++){
+            if(j!=i && text[i].word==text[j].word){
+                text[i].usages++;
+                textTemp[i].usages++; //solely for usage in commonWords
+            }
+        }
     }
 }
 
-/*void commonWords(); takes no arguments.  It takes the now filled textVector
-and simply prints the most common words in the vector.  If the user tries to
-call it before they've entered some text, commonWords will state that no text
-is detected.*/
+/*void commonWords(); takes no arguments.  It takes the now-filled textTemp,
+removes repeats, and then: if textTemp.size()<10, prints words in order of
+decreasing usage, or if textTemp.size()>10, prints the top 10 most common
+words in order of decreasing usage.*/
 void UserData::commonWords()
 {
-    if(userText==""){
-        cout<<"No text detected."<<endl;
-        return;
+    vectorSize=text.size();
+    for(int i=0; i<textTemp.size(); i++){ //removes duplicate words
+        for(int j=i+1; j<textTemp.size(); j++){
+            if(textTemp[j].word==textTemp[i].word){
+                textTemp[j].word="";
+                textTemp[j].usages=-10000;
+            }
+        }
+    }
+    int wordsLeft=10;
+    while(wordsLeft>0 && vectorSize>0){ //prints most common word, then second most common, etc, until textTemp is empty OR 10 most common words have been printed
+        int maximum=0;
+        int indexOfMax;
+        for(int i=0; i<textTemp.size(); i++){
+            if(textTemp[i].usages>maximum){
+                maximum=textTemp[i].usages;
+                indexOfMax=i;
+            }
+        }
+        if(textTemp[indexOfMax].usages != -10000){ //excludes deleted items with usages=-10000
+            cout<<textTemp[indexOfMax].word<<" ("<<textTemp[indexOfMax].usages<<" usages"<<")"<<endl;
+        }
+        textTemp[indexOfMax].word=""; //removes word that was just printed
+        textTemp[indexOfMax].usages=-10000;
+        vectorSize--;
+        wordsLeft--;
     }
 }
 
@@ -290,8 +326,8 @@ void UserData::avgWordLength()
     float letterSum=0;
     float wordCount=0;
     float avgWordLength;
-    for(int i=0; i<textVector.size(); i++){
-        letterSum=letterSum+textVector[i].size();
+    for(int i=0; i<text.size(); i++){
+        letterSum=letterSum+text[i].word.size();
         wordCount=wordCount+1;
     }
     avgWordLength=letterSum/wordCount;
@@ -311,7 +347,6 @@ methods in the UserData class (login, addUser, changePass, deleteAccount).
 It begins a standard search through the tree and returns a) the root with
 username "null" if a node with the argument 'username' isn't found, or b)
 the node with the same username as argument 'username'.*/
-
 User* UserData::searcher(string username)
 {
     User *x=root;

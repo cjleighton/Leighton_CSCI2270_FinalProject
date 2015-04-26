@@ -5,7 +5,14 @@
 
 using namespace std; //bad practice, I know
 
-struct User{
+struct textVector
+{
+    string word;
+    int usages;
+};
+
+struct User
+{
     string username;
     string password;
     //more stuff, text? analysis? we'll see.
@@ -38,7 +45,10 @@ class UserData
         string sessionUser;
         string sessionPassword;
         string userText;
-        vector<string> textVector; //user text stored here for analysis
+        vector<textVector> text; //user text stored here for analysis
+        vector<textVector> textTemp; //identical to 'text', but for editing
+        vector<string> common; //vector of most common words
+        int vectorSize; //size of textVector
         string exportLine;
 };
 
