@@ -46,8 +46,7 @@ class UserData
         string sessionPassword;
         string userText;
         vector<textVector> text; //user text stored here for analysis
-        vector<textVector> textTemp; //identical to 'text', but for editing
-        vector<string> common; //vector of most common words
+        vector<textVector> textTemp; //identical to 'text', but for editing in commonWords
         int vectorSize; //size of textVector
         string exportLine;
 };
