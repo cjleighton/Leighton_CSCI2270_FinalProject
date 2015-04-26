@@ -6,10 +6,9 @@
 #include <fstream>
 
 /*UserData() constructor: builds root with "null" username and initializes
-variables for later use*/
+variables for later use.*/
 UserData::UserData()
 {
-    sessionUser="none"; //initilized upon successful login
     userText="";
     root=new User;
     root->username="null"; //when adding users, always check if name is null before adding and if so, refuse it
@@ -20,13 +19,13 @@ UserData::UserData()
 
 UserData::~UserData(){} //destructor does nothing
 
-/*void interface(string); called from main to access listUsers and
+/*void interface(string); is called from main to access listUsers and
 exporter methods. These functions are recursive and require the tree's
 root be fed in, thus making them uncallable from main.  Always called
-with string arguments "list" or "occasion", each corresponding to the
+with string arguments "list" or "export", each corresponding to the
 function it accesses. private string exportLine is initially blank, but
-after calling exporter, all user data is written to it, which is then written
-to logins.txt from the interface method.*/
+after calling exporter, all user data is written to it, which the interface
+method then writes to logins.txt*/
 void UserData::interface(string occasion){ //this won't count as one of the 10 methods, too cheaty
     if(occasion=="list"){
         listUsers(root);
@@ -39,10 +38,9 @@ void UserData::interface(string occasion){ //this won't count as one of the 10 m
     }
 }
 
-/*void importer(); is called in main just after the declaration of a new
-UserData tree object and requires no arguments. It reads a text file of
-the form "user,pass\n" and passes in those usernames and passwords to
-addUser, which actually builds the tree*/
+/*void importer(); is immediately run in main when the program starts.
+It reads a text file of the form "user,pass\n" and passes in those usernames
+and passwords to addUser, which actually builds the tree*/
 void UserData::importer()
 {
     ifstream inFile("logins.txt");
@@ -56,10 +54,10 @@ void UserData::importer()
     }
 }
 
-/*void exporter(User*); is indirectly called through 'interface' method and
+/*void exporter(User*); is indirectly called through the 'interface' method and
 begins a recursive inorder traversal of the tree. It writes userdata to string
-exportLine, which the interface function then writes to logins.txt.  It takes
-the root of the tree as an argument.*/
+exportLine, which the interface function then writes to logins.txt.  It initially
+takes the root of the tree as an argument.*/
 void UserData::exporter(User* x)
 {
     if(x->leftChild != NULL){
@@ -135,10 +133,10 @@ bool UserData::addUser(string username, string password)
     return true;
 }
 
-/*void listUsers(User*); is called from the 'interface' with the tree's
-root as an argument.  It begins an inorder, recursive readout of the tree.
-It changes nothing and the user can repeatedly call it without changing
-anything.*/
+/*void listUsers(User*); is called from the interface function with the
+tree's root as an argument.  It begins an inorder, recursive readout of
+the tree. It changes nothing and the user can repeatedly call it without
+changing anything.*/
 void UserData::listUsers(User* x)
 {
     if(x->leftChild != NULL){
@@ -154,7 +152,7 @@ void UserData::listUsers(User* x)
 
 /*bool changePass(string,string); is called once the user is logged in and can
 be used to change their account's password (their old password being stored
-in sessionPassword, set in the login method and takes their old password and
+in sessionPassword, set in the login method) and takes their old password and
 the new one.  main() asks for the old password as a security measure and if it
 doesn't equal sessionPassword, it refuses the password change and returns false.
 If it does, it finds the user in the tree and sets their password as argument
@@ -174,14 +172,14 @@ bool UserData::changePass(string oldPass, string newPass)
 
 /*void deleteAccount() can only be called by the user once they're logged in,
 takes no arguments, and returns nothing.  It finds the node with username
-sessionUser (set upon successful login in 'login') and then deletes that node.
-There are three conditions: the node has no children, one child, or two children.
-After a successful deletion and the program goes back to main(), the user is
-returned to the main menu and asked to login, create an account, or quit.*/
+sessionUser (set upon successful login) and then deletes that node. There are
+three conditions: the node has no children, one child, or two children. After
+a successful deletion and the program returns to main(), the user is returned
+to the main menu and asked to login, create an account, or quit.*/
 void UserData::deleteAccount()
 {
     User* x=searcher(sessionUser);
-    //x->username now definitely equals sessionUser
+    //x->username definitely equals sessionUser
     if(x->leftChild==NULL && x->rightChild==NULL){ ///NO CHILDREN
         if(x->parent->leftChild==x){
             x->parent->leftChild=NULL;
@@ -251,14 +249,17 @@ void UserData::deleteAccount()
 }
 
 /*void loadText(string); is called when the logged-in user asks to enter a
-string of text, which loadText takes as argument 'text', splits into
-individual words, and pushes into 'text', a globally declared vector of
-textVector structs. It returns nothing, but filling text makes it available
-for use in commonWords(), avgWordLength(), and sortText().*/
+string of text, which loadText takes as argument 'text', splits into individual
+words, and pushes into 'text' and 'textTemp', globally declared vectors of
+textVector structs. It returns nothing, but filling text, textTemp, and textAlpha
+makes it available for use in commonWords(), avgWordLength(), and sortText().
+loadText clears the three vectors in the case that it's being called for the second
+time, meaning the vectors may have contents from a previous analysis.*/
 void UserData::loadText(string uText)
 {
     text.clear(); //clear if user is doing this for a second time (ergo text will already have stuff in it)
     textTemp.clear();
+    textAlpha.clear();
     userText=uText; //no need to reset userText to "", though
     istringstream is(uText);
     string word;
@@ -267,13 +268,14 @@ void UserData::loadText(string uText)
         newText->word=word;
         newText->usages=1;
         text.push_back(*newText);
-        textTemp.push_back(*newText); //solely for usage in commonWords
+        textTemp.push_back(*newText); //for use in commonWords
+        textAlpha.push_back(word); //for use in sortText
     }
     for(int i=0; i<text.size(); i++){ //calculates the usage of each text[i].word and inserts usage into text[i].usages
         for(int j=0; j<text.size(); j++){
             if(j!=i && text[i].word==text[j].word){
                 text[i].usages++;
-                textTemp[i].usages++; //solely for usage in commonWords
+                textTemp[i].usages++; //for use in commonWords
             }
         }
     }
@@ -285,6 +287,10 @@ decreasing usage, or if textTemp.size()>10, prints the top 10 most common
 words in order of decreasing usage.*/
 void UserData::commonWords()
 {
+    if(userText==""){
+        cout<<"No text detected."<<endl;
+        return;
+    }
     vectorSize=text.size();
     for(int i=0; i<textTemp.size(); i++){ //removes duplicate words
         for(int j=i+1; j<textTemp.size(); j++){
@@ -312,6 +318,7 @@ void UserData::commonWords()
         vectorSize--;
         wordsLeft--;
     }
+    userText="";
 }
 
 /*void avgWordLength(); takes no arguments and calculates the average length
@@ -332,6 +339,7 @@ void UserData::avgWordLength()
     }
     avgWordLength=letterSum/wordCount;
     cout<<"Average word length: "<<avgWordLength<<" letters."<<endl;
+    userText=""; //resets userText to prevent avgWordLength being called again without new text
 }
 
 /*void sortText(); takes no arguments and sorts the words in textVector
@@ -339,7 +347,27 @@ alphabetically.  If nothing is found in textVector (i.e. the use hasn't
 entered anything), sortText will say that no text is detected.*/
 void UserData::sortText()
 {
-    //
+    if(userText==""){
+        cout<<"No text detected."<<endl;
+        return;
+    }
+    vectorSize=text.size();
+    bool flag;
+    do{
+        flag=0;
+        for(int i=0; i<(vectorSize-1); i++){
+            if(textAlpha[i]>textAlpha[i+1]){
+                textAlpha[i].swap(textAlpha[i+1]);
+                flag=1;
+            }
+        }
+    } while(flag==1);
+
+    for(int i=0; i<textAlpha.size(); i++){
+        cout<<textAlpha[i]<<endl;
+    }
+
+    userText="";
 }
 
 /*User* searcher(string); is never called from main(), only from other

@@ -20,7 +20,7 @@ void mainMenuPrint(string occasion)
 void secondaryMenuPrint(string occasion)
 {
     system("clear");
-    cout<<"1. Load text"<<endl<<"   2. Most common words"<<endl<<"   3. Average word length"<<endl<<"4. List all users"<<endl<<"5. Change password"<<endl<<"6. Delete account"<<endl<<"7. Log out"<<endl;
+    cout<<"1. Load text"<<endl<<"   2. Most common words"<<endl<<"   3. Average word length"<<endl<<"   4. Sort text"<<endl<<"5. List all users"<<endl<<"6. Change password"<<endl<<"7. Delete account"<<endl<<"8. Log out"<<endl;
     if(occasion=="fail"){
         cout<<"That is unacceptable."<<endl;
         sleep(1);
@@ -55,11 +55,15 @@ UserData submenu(UserData database){
             secondaryMenuPrint("null");
             database.avgWordLength();
         }
-        else if(input=="4"){ ///LIST USERS
+        else if(input=="4"){ ///SORT TEXT
+            secondaryMenuPrint("null");
+            database.sortText();
+        }
+        else if(input=="5"){ ///LIST USERS
             secondaryMenuPrint("null");
             database.interface("list");
         }
-        else if(input=="5"){ ///CHANGE PASSWORD
+        else if(input=="6"){ ///CHANGE PASSWORD
             secondaryMenuPrint("null");
             cout<<"Current password: "<<endl;
             cin>>oldPass;
@@ -78,14 +82,14 @@ UserData submenu(UserData database){
                 secondaryMenuPrint("null");
             }
         }
-        else if(input=="6"){ ///DELETE ACCOUNT
+        else if(input=="7"){ ///DELETE ACCOUNT
             secondaryMenuPrint("null");
             database.deleteAccount();
             cout<<"Account deleted."<<endl;
             sleep(1);
             return database;
         }
-        else if(input=="7"){ ///LOG OUT
+        else if(input=="8"){ ///LOG OUT
             return database;
         }
     }
