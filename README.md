@@ -9,7 +9,7 @@ How to Run:
 --------------
 Place main.cpp, UserData.cpp, UserData.h, and logins.txt in the same directory and compile with:
 	
-	g++ -o leighton_finalproject main.cpp Userdata.cpp
+	g++ -o leighton_finalproject main.cpp UserData.cpp
 
 Dependencies:
 --------------
