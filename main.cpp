@@ -66,9 +66,9 @@ UserData submenu(UserData database){
         else if(input=="6"){ ///CHANGE PASSWORD
             secondaryMenuPrint("null");
             cout<<"Current password: "<<endl;
-            cin>>oldPass;
+	    getline(cin,oldPass);
             cout<<"New password: "<<endl;
-            cin>>newPass;
+	    getline(cin,newPass);
             passChanged=database.changePass(oldPass, newPass);
             secondaryMenuPrint("null");
             if(passChanged==false){
@@ -106,13 +106,13 @@ int main()
     mainMenuPrint("null");
     while(true){
         cin>>input;
-
+	cin.ignore();
         if(input=="1"){ ///LOG IN
             mainMenuPrint("null");
-            cout<<"Username: "; //takes in username and password
-            cin>>username;
+            cout<<"Username: "; //takes username and password
+	    getline(cin,username);
             cout<<"Password: ";
-            cin>>password;
+	    getline(cin,password);
             loggedIn=database.login(username, password); //true if successful login, false if not
             if(loggedIn=="true"){
                 mainMenuPrint("null");
@@ -135,9 +135,9 @@ int main()
         else if(input=="2"){ ///CREATE ACCOUNT
             mainMenuPrint("null");
             cout<<"Desired username: ";
-            cin>>username;
+	    getline(cin,username);
             cout<<"Password: ";
-            cin>>password;
+	    getline(cin,password);
             addedUser=database.addUser(username, password);
             if(addedUser==true){
                 mainMenuPrint("null");
