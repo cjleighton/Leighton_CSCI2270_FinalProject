@@ -6,7 +6,13 @@
 #include <fstream>
 
 /*UserData() constructor: builds root with "null" username and initializes
-variables for later use.*/
+variables for later use.
+Pre-conditions:
+-userText, the users' custom text, is set to a blank string
+-memory for the tree's root node is unallocated
+Post-conditions:
+-userText is set to "" for testing purposes in commonText, avgWordLength, and sortText
+-root exists with username "null" and NULL children and parents*/
 UserData::UserData()
 {
     userText="";
@@ -20,12 +26,15 @@ UserData::UserData()
 UserData::~UserData(){} //destructor does nothing
 
 /*void interface(string); is called from main to access listUsers and
-exporter methods. These functions are recursive and require the tree's
-root be fed in, thus making them uncallable from main.  Always called
+exporter methods. These functions are recursive and require that the tree's
+root be fed in, thus making them uncallable directly from main.  Always called
 with string arguments "list" or "export", each corresponding to the
-function it accesses. private string exportLine is initially blank, but
-after calling exporter, all user data is written to it, which the interface
-method then writes to logins.txt*/
+function it accesses (listUsers or exporter).
+How to call: <UserData object>.interace(string) where string MUST be either "list" (to list user) or "export" (to export userdata to file)
+Pre-conditions:
+-user should be logged in if argument is "list"
+Post-conditions:
+-logins.txt will have an updated version of the user tree*/
 void UserData::interface(string occasion){ //this won't count as one of the 10 methods, too cheaty
     if(occasion=="list"){
         listUsers(root);
@@ -40,7 +49,15 @@ void UserData::interface(string occasion){ //this won't count as one of the 10 m
 
 /*void importer(); is immediately run in main when the program starts.
 It reads a text file of the form "user,pass\n" and passes in those usernames
-and passwords to addUser, which actually builds the tree*/
+and passwords to addUser, which actually builds the tree
+How to call: <UserData object>.importer(). Should only be called at the beginning of the program,
+immediately after the root node is built. The method expects no arguments.
+Pre-conditions:
+-'root' is the only active node in the binary tree
+-logins.txt is unopened
+Post-conditions:
+-logins.txt has been read
+-the binary tree has been built (via the addUser function)*/
 void UserData::importer()
 {
     ifstream inFile("logins.txt");
@@ -48,7 +65,7 @@ void UserData::importer()
     while(inFile){
         getline(inFile,importUser,',');
         getline(inFile,importPass,'\n');
-        if(importUser != ""){ //last line is there, but empty - program mistakenly processes it as user. this catches that
+        if(importUser != ""){ //last line is there, but empty - program mistakenly processes it as user. this catches that.
             addUser(importUser, importPass);
         }
     }
@@ -56,8 +73,14 @@ void UserData::importer()
 
 /*void exporter(User*); is indirectly called through the 'interface' method and
 begins a recursive inorder traversal of the tree. It writes userdata to string
-exportLine, which the interface function then writes to logins.txt.  It initially
-takes the root of the tree as an argument.*/
+exportLine, which the interface function then writes to logins.txt.
+How to call: calling <UserData object>.interface("export") will execute this function (where "export" is a string)
+Pre-conditions:
+-globally accessible string exportLine is blank
+-the tree should be built (it will be if the program is running, clearly)
+Post-conditions:
+-all userdata from the tree is written to string exportLine
+-method 'interface(string)' then accesses exportLine and writes it to logins.txt*/
 void UserData::exporter(User* x)
 {
     if(x->leftChild != NULL){
@@ -72,12 +95,20 @@ void UserData::exporter(User* x)
 }
 
 /*string login(string,string); is called when the user tries to login and
-takes a string username and password that the user enters.  It searches the
-tree and returns one of three possibilities: a) a node with the right username
-was found and the entered password matches, b) a node with the right username
-was found, but the password was wrong, and c) the user wasn't found.  Upon
-a successful login, it sets global sessionUser and sessionPassword variables
-for use in several other methods.*/
+takes a string username and password. It returns strings that indicate a
+good login, a bad login because of a wrong password, or a bad login because
+of a missing account (username not found).
+How to call: <UserData object>.login(string,string) should be called whenever the user
+tries to login.  Its first argument is the username the user tries to login with and the
+latter is the password they enter.
+Pre-conditions:
+-the tree is built (and can be searched by the 'searcher' method)
+-sessionUser and sessionPassword are either blank or contain the credentials of the
+previously logged in user
+-string "loggedIn" in main.cpp is "false"
+Post-conditions:
+-the sessionUser and sessionPassword are written with the credentials of the current user
+-string "loggedIn" in main.cpp is "true"*/
 string UserData::login(string username, string password)
 {
     User* checker;
@@ -91,15 +122,22 @@ string UserData::login(string username, string password)
         return "badPass";
     }
     else{
-        return "badUser"; //returns string so that we can have these three different returns; 'true' and 'false' aren't enough
+        return "badUser"; //returns string so that we can have these three different returns; booleans'true' and 'false' aren't enough
     }
 }
 
-/*bool addUser(string,string); is called when the user wants to add a new
-account.  It takes the username and password they are requesting to use
-and first checks if the username is already taken, and if not, it adds the user
-to the tree.  addUser is also called from the importer method, once for each
-user/pass pair it finds in logins.txt.*/
+/*bool addUser(string,string); is called from: a) the main menu when the user wants to add a new
+account and b) from importer, repeatedly, as data from logins.txt is read.
+If the username they enter is not already taken, a node with their credentials is added
+to the binary tree.
+How to call: <UserData object>.addUser(string,string) where the first string is the desired username
+and the second is the desired password.
+Pre-conditions:
+-tree must be built
+-for a successfully created account: node with desired username can't already exist
+Post-conditions:
+-if account successfully created: tree will have a new node with new user's data
+-if account successfully created: boolean 'addedUser' in main.cpp is set to true*/
 bool UserData::addUser(string username, string password)
 {
     User *test;
@@ -135,8 +173,13 @@ bool UserData::addUser(string username, string password)
 
 /*void listUsers(User*); is called from the interface function with the
 tree's root as an argument.  It begins an inorder, recursive readout of
-the tree. It changes nothing and the user can repeatedly call it without
-changing anything.*/
+the tree.
+How to call: <UserData object>.interace("list")
+Pre-conditions:
+-tree is built
+-user should be logged in
+Post-conditions:
+-none, changes nothing*/
 void UserData::listUsers(User* x)
 {
     if(x->leftChild != NULL){
@@ -150,13 +193,21 @@ void UserData::listUsers(User* x)
     }
 }
 
-/*bool changePass(string,string); is called once the user is logged in and can
-be used to change their account's password (their old password being stored
-in sessionPassword, set in the login method) and takes their old password and
-the new one.  main() asks for the old password as a security measure and if it
-doesn't equal sessionPassword, it refuses the password change and returns false.
-If it does, it finds the user in the tree and sets their password as argument
-newPass and returns true.*/
+/*bool changePass(string,string); finds the currently logged in user's account in the binary
+tree, verifies that the oldPass they enter matches sessionPassword, which was set from the 'login'
+method, and then replaces it
+with a new password;
+How to call: <UserData object>.changePass(string,string) where the first string is the user's
+current password (they must re-enter is for security) and the latter string is their new password.
+Pre-conditions:
+-tree is built
+-user is logged in
+-sessionPassword is set (occurs automatically with a succesful login)
+-boolean passChanged in main.cpp is set as false
+Post-conditions:
+-if successful password change: user's password in tree is set to newPass
+-sessionPassword is set to newPass
+-boolean passChanged in main.cpp is set to true*/
 bool UserData::changePass(string oldPass, string newPass)
 {
     if(oldPass != sessionPassword){
@@ -166,16 +217,20 @@ bool UserData::changePass(string oldPass, string newPass)
         User *findUser;
         findUser=searcher(sessionUser); //user already logged in, so findUser should ALWAYS get the right user, not just the closest
         findUser->password=newPass;
+	sessionPassword=newPass;
         return true;
     }
 }
 
-/*void deleteAccount() can only be called by the user once they're logged in,
-takes no arguments, and returns nothing.  It finds the node with username
-sessionUser (set upon successful login) and then deletes that node. There are
-three conditions: the node has no children, one child, or two children. After
-a successful deletion and the program returns to main(), the user is returned
-to the main menu and asked to login, create an account, or quit.*/
+/*void deleteAccount() finds the node with node->username that matches sessionUser, which was
+set to the current user's username in the 'login' method.  It then deletes that node from the
+binary tree.
+How to call: <UserData object>.deleteAccount()
+Pre-conditions:
+-tree is built
+-user is logged in (and therefore, account to delete exists and sessionUser is set)
+Post-conditions:
+-node with current user's credentials are deleted from binary tree*/
 void UserData::deleteAccount()
 {
     User* x=searcher(sessionUser);
@@ -249,12 +304,19 @@ void UserData::deleteAccount()
 }
 
 /*void loadText(string); is called when the logged-in user asks to enter a
-string of text, which loadText takes as argument 'text', splits into individual
-words, and pushes into 'text' and 'textTemp', globally declared vectors of
-textVector structs. It returns nothing, but filling text, textTemp, and textAlpha
-makes it available for use in commonWords(), avgWordLength(), and sortText().
-loadText clears the three vectors in the case that it's being called for the second
-time, meaning the vectors may have contents from a previous analysis.*/
+string of text, which loadText splits into individual words, and pushes into 
+'text' and 'textTemp', globally declared vectors of textVector structs and also into
+'textAlpha', a vector of strings.
+How to call: <UserData object>.loadText(string) where string is the user's custom text.
+Pre-conditions:
+-user is logged in
+-string 'text' in main.cpp is set by user just prior to loadText being called
+Post-conditions:
+-vector 'text' is filled with the individual words in userText
+-vector 'textTemp' is filled with the individual words in userText
+-vector 'textAlpha' is filled with the individual words in userText
+-the number of occurences of each word is recorded in each item in text and textTemp's integer 'usages' attribute. for example, if the vector has words <test, test, hello, test>, then items 0, 1, and 3
+record their usage as 3 while item 3 only records a usage of 1.*/
 void UserData::loadText(string uText)
 {
     text.clear(); //clear if user is doing this for a second time (ergo text will already have stuff in it)
@@ -281,10 +343,18 @@ void UserData::loadText(string uText)
     }
 }
 
-/*void commonWords(); takes no arguments.  It takes the now-filled textTemp,
-removes repeats, and then: if textTemp.size()<10, prints words in order of
-decreasing usage, or if textTemp.size()>10, prints the top 10 most common
-words in order of decreasing usage.*/
+/*void commonWords(); takes the now-filled textTemp, removes repeats, 
+and then if a) textTemp.size()<10, prints all words in order of decreasing usage,
+or if b) textTemp.size()>10, prints the top 10 most common words in order of
+decreasing usage.
+How to call: <UserData object>.commonWords()
+Pre-conditions:
+-vector of textVector items 'textTemp' is filled with individual words from userText (done in loadText)
+-userText cannot be blank or "No text detected" will be printed
+-user must be logged in
+Post-conditions:
+-textTemp is severely corrupted (cleared upon next calling of loadText anyway, so it doesn't matter)
+-userText is reset to ""*/
 void UserData::commonWords()
 {
     if(userText==""){
@@ -318,12 +388,18 @@ void UserData::commonWords()
         vectorSize--;
         wordsLeft--;
     }
-    userText="";
+    userText=""; //resets userText to prevent avgWordLength being called again without new text
 }
 
-/*void avgWordLength(); takes no arguments and calculates the average length
-of the words in textVector.  If there are no words in textVector (i.e. the
-user hasn't entered anything), avgWordLength will say that no text is detected.*/
+/*void avgWordLength(); calculates the average length
+of the words in vector 'text'. If there are no words in textVector (i.e. the
+user hasn't entered anything), avgWordLength will say that no text is detected.
+How to call: <UserData object>.avgWordLength();
+Pre-conditions:
+-userText != "" (should be set in loadText)
+-vector 'text' is not empty (should be filled in loadText method)
+Post-conditions:
+-userText=""*/
 void UserData::avgWordLength()
 {
     if(userText==""){
@@ -344,7 +420,14 @@ void UserData::avgWordLength()
 
 /*void sortText(); takes no arguments and sorts the words in textVector
 alphabetically.  If nothing is found in textVector (i.e. the use hasn't
-entered anything), sortText will say that no text is detected.*/
+entered anything), sortText will say that no text is detected.
+How to call: <UserData object>.sortText();
+Pre-conditions:
+-userText != "" (should be set in loadText)
+-vector 'textAlpha' is not empty (should be filled in loadText method)
+Post-conditions:
+-userText=""
+-vector 'textAlpha' has been sorted alphabetically*/
 void UserData::sortText()
 {
     if(userText==""){
@@ -374,7 +457,13 @@ void UserData::sortText()
 methods in the UserData class (login, addUser, changePass, deleteAccount).
 It begins a standard search through the tree and returns a) the root with
 username "null" if a node with the argument 'username' isn't found, or b)
-the node with the same username as argument 'username'.*/
+the node with the same username as argument 'username'.
+How to call: <UserData objet>searcher(string) where string is a username
+Pre-conditions:
+-binary tree is built
+Post-conditions:
+-wherever this method was equated to a pointer to a node, that pointer is set to
+point to the node 'x' that this searcher method returns*/
 User* UserData::searcher(string username)
 {
     User *x=root;
