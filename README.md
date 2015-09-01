@@ -1,3 +1,6 @@
+This was my final project for CSCI 2270 from Spring 2015.
+--------------
+
 # Leighton_CSCI2270_FinalProject: Text analyzer with login system
 Christopher Leighton's final project for CSCI 2270
 
